@@ -10,13 +10,59 @@ import {
   KeyboardAvoidingView,
   Platform,
 } from "react-native";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
+import axios from "axios";
+import Toast from "react-native-toast-message";
 const imgBackground = require("../../assets/images/cinema1.jpeg");
+const schema = z.object({
+  email: z.string().email("Invalid email address"),
+  password: z.string().min(6, "Password must be at least 6 characters"),
+});
+type FormData = z.infer<typeof schema>;
 
 export default function ProfileScreen({}) {
+  const {
+    register,
+    handleSubmit,
+    setValue,
+    formState: { errors, isSubmitting },
+  } = useForm<FormData>({
+    resolver: zodResolver(schema),
+  });
+  const onSubmit = async (data: FormData) => {
+    try {
+      console.log(data);
+      const response = await axios.post(
+        "http://192.168.1.3:8800/api/auth/login",
+        data
+      );
+      if (response.status === 200) {
+        Toast.show({
+          type: "success",
+          text1: "Login successful!",
+        });
+        setTimeout(() => router.push("/movies"), 1500);
+      } else {
+        Toast.show({
+          type: "error",
+          text1: "Unexpected response from server",
+        });
+      }
+    } catch (error) {
+      console.error("Login error:", error);
+      Toast.show({
+        type: "error",
+        text1: "Login failed",
+      });
+    }
+  };
   return (
     <ImageBackground source={imgBackground} className="flex-1">
       <SafeAreaView className="flex-1 bg-black/40">
         <KeyboardAvoidingView
+          keyboardVerticalOffset={100}
           behavior={Platform.OS === "ios" ? "padding" : "height"}
           className="flex-1"
         >
@@ -29,6 +75,7 @@ export default function ProfileScreen({}) {
 
             <View className="space-y-4">
               <TextInput
+                onChangeText={(text) => setValue("email", text)}
                 placeholder="Email address"
                 placeholderTextColor="#a1a1aa"
                 keyboardType="email-address"
@@ -36,22 +83,26 @@ export default function ProfileScreen({}) {
                 autoCorrect={false}
                 className="w-full bg-white/90 rounded-lg px-4 py-3 text-gray-900"
               />
-
+              {errors.email && (
+                <Text className="text-red-500">{errors.email.message}</Text>
+              )}
               <TextInput
+                onChangeText={(text) => setValue("password", text)}
                 placeholder="Password"
                 placeholderTextColor="#a1a1aa"
                 secureTextEntry
                 className="w-full bg-white/90 rounded-lg px-4 py-3 text-gray-900"
               />
-
+              {errors.password && (
+                <Text className="text-red-500">{errors.password.message}</Text>
+              )}
               <TouchableOpacity
                 className="bg-orange-600 py-3 rounded-lg mt-6"
-                onPress={() => {
-                  console.log("Login pressed");
-                }}
+                onPress={handleSubmit(onSubmit)}
+                disabled={isSubmitting}
               >
                 <Text className="text-white text-center font-semibold text-lg">
-                  Sign in
+                  {isSubmitting ? "Signning in..." : "Sign in"}
                 </Text>
               </TouchableOpacity>
             </View>
