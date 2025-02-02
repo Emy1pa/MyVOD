@@ -44,6 +44,18 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
+        name="movie/[id]"
+        options={{
+          href: null,
+        }}
+      />
+      <Tabs.Screen
+        name="recent"
+        options={{
+          href: null,
+        }}
+      />
+      <Tabs.Screen
         name="login"
         options={{
           title: "Login",

@@ -1,5 +1,5 @@
 import { router } from "expo-router";
-import React from "react";
+import React, { useState } from "react";
 import {
   View,
   Text,
@@ -15,14 +15,20 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import axios from "axios";
 import Toast from "react-native-toast-message";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+
 const imgBackground = require("../../assets/images/cinema1.jpeg");
 const schema = z.object({
   email: z.string().email("Invalid email address"),
   password: z.string().min(6, "Password must be at least 6 characters"),
 });
 type FormData = z.infer<typeof schema>;
+interface ProfileScreenProps {
+  setIsLoggedIn?: (value: boolean) => void;
+}
+export default function ProfileScreen({ setIsLoggedIn }: ProfileScreenProps) {
+  const [loading, setLoading] = useState(false);
 
-export default function ProfileScreen({}) {
   const {
     register,
     handleSubmit,
@@ -31,6 +37,21 @@ export default function ProfileScreen({}) {
   } = useForm<FormData>({
     resolver: zodResolver(schema),
   });
+  const storeAuthData = async (token: string, userId: string, role: string) => {
+    try {
+      await AsyncStorage.multiSet([
+        ["authToken", token],
+        ["userId", userId],
+        ["userRole", role],
+      ]);
+    } catch (error) {
+      console.error("Error storing auth data:", error);
+      Toast.show({
+        type: "error",
+        text1: "Error saving authentication data",
+      });
+    }
+  };
   const onSubmit = async (data: FormData) => {
     try {
       console.log(data);
@@ -39,11 +60,36 @@ export default function ProfileScreen({}) {
         data
       );
       if (response.status === 200) {
+        const { token, role, userId, accountStatus } = response.data;
+        if (!token || !role || !userId) {
+          throw new Error("Missing authentication data from response");
+        }
+        if (accountStatus === "banned") {
+          Toast.show({
+            type: "error",
+            text1: "Your account has been banned. Please contact support.",
+          });
+          return;
+        }
+        await storeAuthData(token, userId, role);
+        if (setIsLoggedIn) {
+          setIsLoggedIn(true);
+        }
         Toast.show({
           type: "success",
           text1: "Login successful!",
         });
-        setTimeout(() => router.push("/movies"), 1500);
+        setTimeout(() => {
+          switch (role) {
+            case "admin":
+              router.push("/");
+              break;
+            case "client":
+            default:
+              router.push("/movies");
+              break;
+          }
+        }, 1500);
       } else {
         Toast.show({
           type: "error",

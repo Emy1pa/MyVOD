@@ -14,6 +14,7 @@ import { Picker } from "@react-native-picker/picker";
 import axios from "axios";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { Link } from "expo-router";
+import { router } from "expo-router";
 
 type Movie = {
   _id: string;
@@ -66,7 +67,9 @@ export default function MoviesScreen() {
     });
     setFilteredMovies(filtered);
   }, [titleFilter, genreFilter, movies]);
-
+  const handleViewDetails = (movieId: string) => {
+    router.push(`/movie/${movieId}`);
+  };
   if (loading) {
     return (
       <View className="flex-1 justify-center items-center bg-black">
@@ -151,6 +154,14 @@ export default function MoviesScreen() {
                           {movie.genre}
                         </Text>
                       </View>
+                      <TouchableOpacity
+                        className="bg-orange-600 py-2 rounded-lg"
+                        onPress={() => handleViewDetails(movie._id)}
+                      >
+                        <Text className="text-white text-center font-semibold">
+                          View Details
+                        </Text>
+                      </TouchableOpacity>
                     </View>
                   </View>
                 </TouchableOpacity>
