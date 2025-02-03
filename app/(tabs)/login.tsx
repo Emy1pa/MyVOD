@@ -54,11 +54,14 @@ export default function ProfileScreen({ setIsLoggedIn }: ProfileScreenProps) {
   };
   const onSubmit = async (data: FormData) => {
     try {
+      console.log("test");
+
       console.log(data);
       const response = await axios.post(
         "http://192.168.1.3:8800/api/auth/login",
         data
       );
+
       if (response.status === 200) {
         const { token, role, userId, accountStatus } = response.data;
         if (!token || !role || !userId) {

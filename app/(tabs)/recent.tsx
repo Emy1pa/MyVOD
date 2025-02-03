@@ -29,7 +29,7 @@ export const RecentMoviesSection = () => {
     const fetchRecentMovies = async () => {
       try {
         const response = await axios.get<Movie[]>(
-          "http://192.168.1.3:8800/api/movies"
+          "http:/192.168.1.3:8800/api/movies"
         );
 
         const sortedMovies = response.data

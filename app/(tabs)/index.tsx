@@ -7,18 +7,11 @@ import {
   Image,
   SafeAreaView,
   StatusBar,
-  StyleSheet,
 } from "react-native";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { RecentMoviesSection } from "./recent";
 const imgBackground = require("../../assets/images/cinema1.jpeg");
 export default function HomeScreen() {
-  type Category = {
-    id: string;
-    name: string;
-    icon: keyof typeof MaterialIcons.glyphMap;
-  };
-
   return (
     <SafeAreaView className="flex-1 bg-black">
       <StatusBar barStyle="light-content" />

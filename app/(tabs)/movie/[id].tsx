@@ -13,6 +13,8 @@ import {
 import { useLocalSearchParams, router } from "expo-router";
 import axios from "axios";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { FontAwesome } from "@expo/vector-icons";
 
 const screenWidth = Dimensions.get("window").width;
 const imageHeight = (screenWidth * 3) / 2;
@@ -35,7 +37,7 @@ export default function MovieDetailsScreen() {
   const [relatedMovies, setRelatedMovies] = useState<MovieDetails[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-
+  const [isFavorite, setIsFavorite] = useState(false);
   useEffect(() => {
     const fetchMovieDetails = async () => {
       try {
@@ -53,6 +55,7 @@ export default function MovieDetailsScreen() {
           .slice(0, 3);
 
         setRelatedMovies(filtered);
+        await checkIfFavorite();
       } catch (err) {
         console.error("Error fetching movie details:", err);
         setError("Failed to load movie details");
@@ -64,6 +67,98 @@ export default function MovieDetailsScreen() {
     fetchMovieDetails();
   }, [id]);
 
+  const checkIfFavorite = async () => {
+    try {
+      const cachedFavorites = await AsyncStorage.getItem("cachedFavorites");
+      const favoritesObj = cachedFavorites ? JSON.parse(cachedFavorites) : {};
+
+      if (favoritesObj[id.toString()] !== undefined) {
+        setIsFavorite(favoritesObj[id.toString()]);
+        return;
+      }
+
+      const userId = await AsyncStorage.getItem("userId");
+      const token = await AsyncStorage.getItem("authToken");
+
+      if (userId && token) {
+        const response = await axios.get(
+          `http://192.168.1.3:8800/api/favorites/user/${userId}`,
+          {
+            headers: { token: token },
+          }
+        );
+
+        console.log("Favorites response:", response.data);
+
+        const favorites = Array.isArray(response.data) ? response.data : [];
+        const favoriteMovie = favorites.find(
+          (fav: any) => fav.movie?.toString() === id
+        );
+
+        const isFav = !!favoriteMovie;
+        setIsFavorite(isFav);
+
+        favoritesObj[id.toString()] = isFav;
+        await AsyncStorage.setItem(
+          "cachedFavorites",
+          JSON.stringify(favoritesObj)
+        );
+      }
+    } catch (err) {
+      console.error("Error checking favorites:", err);
+    }
+  };
+
+  const handleFavoriteToggle = async () => {
+    const userId = await AsyncStorage.getItem("userId");
+    const token = await AsyncStorage.getItem("authToken");
+
+    const newFavoriteState = !isFavorite;
+    setIsFavorite(newFavoriteState);
+
+    const cachedFavorites = await AsyncStorage.getItem("cachedFavorites");
+    const favoritesObj = cachedFavorites ? JSON.parse(cachedFavorites) : {};
+
+    favoritesObj[id.toString()] = newFavoriteState;
+    await AsyncStorage.setItem("cachedFavorites", JSON.stringify(favoritesObj));
+
+    try {
+      if (newFavoriteState) {
+        await axios.post(
+          `http://192.168.1.3:8800/api/favorites`,
+          { user: userId, movie: id },
+          {
+            headers: {
+              token: token,
+              "Content-Type": "application/json",
+            },
+          }
+        );
+      } else {
+        await axios.delete(`http://192.168.1.3:8800/api/favorites`, {
+          headers: {
+            token: token,
+            "Content-Type": "application/json",
+          },
+          data: { user: userId, movie: id },
+        });
+      }
+    } catch (err) {
+      console.error("Error toggling favorite:", err);
+      setIsFavorite(!newFavoriteState);
+
+      const revertedFavorites = await AsyncStorage.getItem("cachedFavorites");
+      const revertedObj = revertedFavorites
+        ? JSON.parse(revertedFavorites)
+        : {};
+
+      revertedObj[id.toString()] = !newFavoriteState;
+      await AsyncStorage.setItem(
+        "cachedFavorites",
+        JSON.stringify(revertedObj)
+      );
+    }
+  };
   const handleRelatedMoviePress = (movieId: string) => {
     router.push(`/movie/${movieId}`);
   };
@@ -99,7 +194,16 @@ export default function MovieDetailsScreen() {
             resizeMode="cover"
           />
         </View>
-
+        <TouchableOpacity
+          onPress={handleFavoriteToggle}
+          className="absolute top-10 right-4"
+        >
+          <FontAwesome
+            name={isFavorite ? "heart" : "heart-o"}
+            size={24}
+            color={isFavorite ? "red" : "white"}
+          />
+        </TouchableOpacity>
         <View className="p-4">
           <View className="mb-6">
             <Text className="text-white text-3xl font-bold">{movie.title}</Text>
