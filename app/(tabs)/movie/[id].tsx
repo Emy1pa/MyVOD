@@ -15,6 +15,7 @@ import axios from "axios";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { FontAwesome } from "@expo/vector-icons";
+import MovieComments from "../comments";
 
 const screenWidth = Dimensions.get("window").width;
 const imageHeight = (screenWidth * 3) / 2;
@@ -283,6 +284,7 @@ export default function MovieDetailsScreen() {
             </View>
           )}
         </View>
+        <MovieComments movieId={movie._id} />
       </ScrollView>
     </SafeAreaView>
   );
