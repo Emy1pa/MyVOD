@@ -15,6 +15,7 @@ import axios from "axios";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { Link } from "expo-router";
 import { router } from "expo-router";
+import MovieComments from "./comments";
 
 type Movie = {
   _id: string;
