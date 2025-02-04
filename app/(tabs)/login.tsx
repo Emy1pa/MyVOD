@@ -1,5 +1,5 @@
 import { router } from "expo-router";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   View,
   Text,
@@ -28,6 +28,8 @@ interface ProfileScreenProps {
 }
 export default function ProfileScreen({ setIsLoggedIn }: ProfileScreenProps) {
   const [loading, setLoading] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [userEmail, setUserEmail] = useState<string | null>(null);
 
   const {
     register,
@@ -37,6 +39,24 @@ export default function ProfileScreen({ setIsLoggedIn }: ProfileScreenProps) {
   } = useForm<FormData>({
     resolver: zodResolver(schema),
   });
+  useEffect(() => {
+    checkAuthStatus();
+  }, []);
+  const checkAuthStatus = async () => {
+    try {
+      const token = await AsyncStorage.getItem("authToken");
+      const email = await AsyncStorage.getItem("userEmail");
+      if (token) {
+        setIsAuthenticated(true);
+        setUserEmail(email);
+        if (setIsLoggedIn) {
+          setIsLoggedIn(true);
+        }
+      }
+    } catch (error) {
+      console.error("Error checking auth status:", error);
+    }
+  };
   const storeAuthData = async (token: string, userId: string, role: string) => {
     try {
       await AsyncStorage.multiSet([
@@ -52,6 +72,36 @@ export default function ProfileScreen({ setIsLoggedIn }: ProfileScreenProps) {
       });
     }
   };
+  const handleLogout = async () => {
+    try {
+      setLoading(true);
+      await AsyncStorage.multiRemove([
+        "authToken",
+        "userId",
+        "userRole",
+        "userEmail",
+      ]);
+      setIsAuthenticated(false);
+      setUserEmail(null);
+      if (setIsLoggedIn) {
+        setIsLoggedIn(false);
+      }
+      Toast.show({
+        type: "success",
+        text1: "Successfully logged out",
+      });
+      router.push("/");
+    } catch (error) {
+      console.error("Error logging out:", error);
+      Toast.show({
+        type: "error",
+        text1: "Error logging out",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const onSubmit = async (data: FormData) => {
     try {
       console.log("test");
@@ -75,6 +125,9 @@ export default function ProfileScreen({ setIsLoggedIn }: ProfileScreenProps) {
           return;
         }
         await storeAuthData(token, userId, role);
+        setIsAuthenticated(true);
+        setUserEmail(data.email);
+
         if (setIsLoggedIn) {
           setIsLoggedIn(true);
         }
@@ -105,8 +158,40 @@ export default function ProfileScreen({ setIsLoggedIn }: ProfileScreenProps) {
         type: "error",
         text1: "Login failed",
       });
+    } finally {
+      setLoading(false);
     }
   };
+  if (isAuthenticated) {
+    return (
+      <ImageBackground source={imgBackground} className="flex-1">
+        <SafeAreaView className="flex-1 bg-black/40">
+          <View className="flex-1 justify-center px-6">
+            <View className="mb-8">
+              <Text className="text-2xl text-center font-bold text-white mb-2">
+                Welcome back!
+              </Text>
+              {userEmail && (
+                <Text className="text-lg text-center text-gray-200">
+                  {userEmail}
+                </Text>
+              )}
+            </View>
+
+            <TouchableOpacity
+              className="bg-red-600 py-3 rounded-lg mt-6"
+              onPress={handleLogout}
+              disabled={loading}
+            >
+              <Text className="text-white text-center font-semibold text-lg">
+                {loading ? "Logging out..." : "Logout"}
+              </Text>
+            </TouchableOpacity>
+          </View>
+        </SafeAreaView>
+      </ImageBackground>
+    );
+  }
   return (
     <ImageBackground source={imgBackground} className="flex-1">
       <SafeAreaView className="flex-1 bg-black/40">
