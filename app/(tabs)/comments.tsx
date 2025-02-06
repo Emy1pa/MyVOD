@@ -43,11 +43,17 @@ const MovieComments = ({ movieId }: { movieId: string }) => {
 
   const fetchComments = async () => {
     try {
-      const response = await axios.get(`http://192.168.1.3:8800/api/comments`, {
-        params: { movie: movieId },
-        headers: token ? { token } : {},
-      });
-      setComments(response.data);
+      const response = await axios.get(
+        `http://192.168.8.151:8800/api/comments`,
+        {
+          params: { movie: movieId },
+          headers: token ? { token } : {},
+        }
+      );
+      const movieComments = response.data.filter(
+        (comment: Comment) => comment.movie === movieId
+      );
+      setComments(movieComments);
     } catch (err) {
       console.log("Error", "Failed to load comments");
     }
@@ -59,7 +65,7 @@ const MovieComments = ({ movieId }: { movieId: string }) => {
     try {
       setLoading(true);
       await axios.post(
-        `http://192.168.1.3:8800/api/comments`,
+        `http://192.168.8.151:8800/api/comments`,
         {
           user: userId,
           movie: movieId,
@@ -90,7 +96,7 @@ const MovieComments = ({ movieId }: { movieId: string }) => {
         onPress: async () => {
           try {
             await axios.delete(
-              `http://192.168.1.3:8800/api/comments/${commentId}`,
+              `http://192.168.8.151:8800/api/comments/${commentId}`,
               {
                 data: { user: userId },
                 headers: { token },
@@ -117,7 +123,7 @@ const MovieComments = ({ movieId }: { movieId: string }) => {
       }
       try {
         await axios.put(
-          `http://192.168.1.3:8800/api/comments/${commentId}`,
+          `http://192.168.8.151:8800/api/comments/${commentId}`,
           { content: editContent.trim() },
           { headers: { token } }
         );

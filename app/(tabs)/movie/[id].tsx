@@ -16,6 +16,7 @@ import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { FontAwesome } from "@expo/vector-icons";
 import MovieComments from "../comments";
+import MovieRating from "../rating";
 
 const screenWidth = Dimensions.get("window").width;
 const imageHeight = (screenWidth * 3) / 2;
@@ -43,12 +44,12 @@ export default function MovieDetailsScreen() {
     const fetchMovieDetails = async () => {
       try {
         const response = await axios.get<MovieDetails>(
-          `http://192.168.1.3:8800/api/movies/${id}`
+          `http://192.168.8.151:8800/api/movies/${id}`
         );
         setMovie(response.data);
 
         const relatedResponse = await axios.get<MovieDetails[]>(
-          `http://192.168.1.3:8800/api/movies`
+          `http://192.168.8.151:8800/api/movies`
         );
 
         const filtered = relatedResponse.data
@@ -83,7 +84,7 @@ export default function MovieDetailsScreen() {
 
       if (userId && token) {
         const response = await axios.get(
-          `http://192.168.1.3:8800/api/favorites/user/${userId}`,
+          `http://192.168.8.151:8800/api/favorites/user/${userId}`,
           {
             headers: { token: token },
           }
@@ -126,7 +127,7 @@ export default function MovieDetailsScreen() {
     try {
       if (newFavoriteState) {
         await axios.post(
-          `http://192.168.1.3:8800/api/favorites`,
+          `http://192.168.8.151:8800/api/favorites`,
           { user: userId, movie: id },
           {
             headers: {
@@ -136,7 +137,7 @@ export default function MovieDetailsScreen() {
           }
         );
       } else {
-        await axios.delete(`http://192.168.1.3:8800/api/favorites`, {
+        await axios.delete(`http://192.168.8.151:8800/api/favorites`, {
           headers: {
             token: token,
             "Content-Type": "application/json",
@@ -285,6 +286,7 @@ export default function MovieDetailsScreen() {
           )}
         </View>
         <MovieComments movieId={movie._id} />
+        <MovieRating movieId={movie._id} />
       </ScrollView>
     </SafeAreaView>
   );

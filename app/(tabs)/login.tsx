@@ -108,7 +108,7 @@ export default function ProfileScreen({ setIsLoggedIn }: ProfileScreenProps) {
 
       console.log(data);
       const response = await axios.post(
-        "http://192.168.1.3:8800/api/auth/login",
+        "http://192.168.8.151:8800/api/auth/login",
         data
       );
 
