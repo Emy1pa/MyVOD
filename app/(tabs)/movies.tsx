@@ -39,7 +39,7 @@ export default function MoviesScreen() {
     const fetchMovies = async () => {
       try {
         const response = await axios.get<Movie[]>(
-          "http://192.168.1.3:8800/api/movies"
+          "http://192.168.8.151:8800/api/movies"
         );
         setMovies(response.data);
         setFilteredMovies(response.data);

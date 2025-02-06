@@ -43,7 +43,7 @@ export default function RegisterScreen() {
     try {
       console.log(data);
       const response = await axios.post(
-        "http://192.168.1.3:8800/api/auth/register",
+        "http://192.168.8.151:8800/api/auth/register",
         data
       );
       if (response.status === 201) {

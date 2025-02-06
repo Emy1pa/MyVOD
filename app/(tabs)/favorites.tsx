@@ -61,7 +61,7 @@ const FavoritesList = () => {
       }
 
       const response = await axios.get<Favorite[]>(
-        `http://192.168.1.3:8800/api/favorites/user/${userId}`,
+        `http://192.168.8.151:8800/api/favorites/user/${userId}`,
         {
           headers: { token: token },
         }
